@@ -66,15 +66,8 @@ variable "included_vms" {
 # ==============================================================
 # Jadwal
 # ==============================================================
-variable "schedule_start_datetime" {
-  description = "Waktu mulai berlaku Schedule Start VM, format RFC3339, HARUS beberapa menit di masa depan saat apply (contoh: 2026-08-28T08:30:00+07:00)"
-  type        = string
-}
-
-variable "schedule_stop_datetime" {
-  description = "Waktu mulai berlaku Schedule Stop VM, format RFC3339 (contoh: 2026-08-28T22:30:00+07:00)"
-  type        = string
-}
+# schedule_start_datetime & schedule_stop_datetime dihapus —
+# sekarang dikalkulasi otomatis di schedules.tf (H+1 dari saat apply).
 
 variable "timezone" {
   description = "Timezone untuk Schedule"

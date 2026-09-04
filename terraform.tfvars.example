@@ -19,6 +19,4 @@ teams_webhook_url = "https://default....environment.api.powerplatform.com/.../in
 
 included_vms = ["VM*", "APP-*"]
 
-# WAJIB: set ke waktu beberapa menit setelah `terraform apply` akan dijalankan
-schedule_start_datetime = "2026-08-28T08:30:00+07:00"
-schedule_stop_datetime  = "2026-08-28T22:30:00+07:00"
+# Jadwal tidak perlu diisi — otomatis H+1 08:30 & 22:30 WIB dari saat terraform apply dijalankan.

@@ -22,9 +22,10 @@ terraform.tfvars.example    # Contoh isian variabel per client
 
 1. Copy seluruh folder ini (atau gunakan sebagai module Terraform terpisah per client).
 2. Copy `terraform.tfvars.example` menjadi `terraform.tfvars`, isi sesuai data client (tenant ID, subscription ID, nama VM, webhook URL, dst).
-3. Login ke tenant client:
+3. Login ke tenant client dan set subscription aktif:
    ```
    az login --tenant <tenant_id>
+   az account set --subscription <subscription_id>
    ```
 4. Jalankan:
    ```
@@ -38,10 +39,10 @@ terraform.tfvars.example    # Contoh isian variabel per client
 
 ## Catatan Penting
 
-- **`schedule_start_datetime`/`schedule_stop_datetime`** harus berupa waktu di masa depan relatif terhadap kapan `terraform apply` dijalankan (Azure menolak start_time di masa lalu). Sesuaikan tanggalnya setiap kali deploy ke client baru.
+- **Jadwal otomatis**: `schedule_start_datetime` dan `schedule_stop_datetime` sudah tidak diperlukan di `terraform.tfvars`. Waktu jadwal dikalkulasi otomatis menjadi H+1 pukul 08:30 dan 22:30 WIB dari saat `terraform apply` dijalankan — tidak perlu ubah tanggal manual setiap deploy client baru.
 - **Import modul (`modules.tf`)** kadang lambat atau timeout karena ukuran paket `Az.*` cukup besar. Jika `terraform apply` gagal di step ini, import manual lewat Portal (Modules → Browse gallery) sebagai fallback, lalu lanjutkan apply untuk resource lainnya.
 - **`role_scope_level`**: default `"subscription"` (Contributor di level Subscription, paling simpel, 1x assign). Ganti ke `"resource_group"` dan isi `vm_resource_groups` jika client mengharuskan akses lebih terbatas (Virtual Machine Contributor per Resource Group).
-- Variabel `teams_webhook_url` dan `local_teams_webhook_url` ditandai `sensitive` — tidak akan tampil di log/output Terraform.
+- Variabel `teams_webhook_url` ditandai `sensitive` — tidak akan tampil di log/output Terraform.
 - **State file** (`terraform.tfstate`) sebaiknya disimpan di backend terpusat (Azure Storage) jika mengelola banyak client sekaligus, supaya tidak tercecer sebagai file lokal per client.
 
 ## Catatan Lain
