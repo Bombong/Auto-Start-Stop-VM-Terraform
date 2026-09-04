@@ -22,20 +22,37 @@ terraform.tfvars.example    # Contoh isian variabel per client
 
 1. Copy seluruh folder ini (atau gunakan sebagai module Terraform terpisah per client).
 2. Copy `terraform.tfvars.example` menjadi `terraform.tfvars`, isi sesuai data client (tenant ID, subscription ID, nama VM, webhook URL, dst).
-3. Login ke tenant client dan set subscription aktif:
+3. Cek akun Azure aktif yang sedang dipakai (opsional tapi disarankan sebelum login):
+
+   ```
+   az account show
+   ```
+
+   Outputnya akan menampilkan `name` (nama subscription), `id` (subscription ID), `tenantId`, dan `user.name` (akun yang sedang login). Untuk melihat semua subscription yang bisa diakses:
+
+   ```
+   az account list --output table
+   ```
+
+4. Login ke tenant client dan set subscription aktif:
    ```
    az login --tenant <tenant_id>
    az account set --subscription <subscription_id>
    ```
-4. Jalankan:
+   Verifikasi sudah di context yang benar:
+   ```
+   az account show --query "{Subscription:name, SubscriptionId:id, Tenant:tenantId, User:user.name}" --output table
+   ```
+5. Jalankan:
    ```
    terraform init
    terraform plan
    terraform apply
    ```
-5. Setelah selesai, cek output `managed_identity_principal_id` — pastikan role assignment berhasil (bisa diverifikasi lewat Portal, IAM Subscription).
-6. Login ke Azure Portal client, buka Runbook `RB-VM-AutoOnOff`, klik **Start** untuk test manual.
-7. Cek Teams — pastikan notifikasi masuk.
+6. Setelah selesai, cek output `managed_identity_principal_id` — pastikan role assignment berhasil (bisa diverifikasi lewat Portal, IAM Subscription).
+7. Login ke Azure Portal client, buka Runbook `RB-VM-AutoOnOff`, klik **Start** untuk test manual.
+8. Cek Teams — pastikan notifikasi masuk.
+9. Jalankan `RB-Sync-Tenant` secara manual dari Portal (Runbooks → `RB-Sync-Tenant` → Start) untuk sinkronisasi daftar Subscription aktif ke variabel `TenantMappingJSON`. Lakukan ini setiap kali ada perubahan Subscription di tenant client.
 
 ## Catatan Penting
 
