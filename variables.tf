@@ -15,8 +15,13 @@ variable "subscription_id" {
 # Konfigurasi Automation Account
 # ==============================================================
 variable "client_name" {
-  description = "Nama singkat client, dipakai untuk penamaan resource (mis. ClientA)"
+  description = "Nama singkat client, dipakai untuk penamaan resource (mis. ClientA). Hanya huruf, angka, dan tanda hubung."
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.client_name))
+    error_message = "client_name hanya boleh mengandung huruf (a-z, A-Z), angka (0-9), dan tanda hubung (-). Tidak boleh ada spasi atau karakter khusus lain."
+  }
 }
 
 variable "resource_group_name" {
