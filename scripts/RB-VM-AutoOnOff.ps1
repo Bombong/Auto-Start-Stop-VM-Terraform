@@ -18,7 +18,7 @@ $isWork = ($wibNow.TimeOfDay -ge [TimeSpan]"08:30" -and $wibNow.TimeOfDay -lt [T
 $jobs   = [System.Collections.Generic.List[PSObject]]::new()
 
 # ===============================================================
-# 2. FUNCTION: Ambil Last Action Time dari Provisioning State
+# 2. FUNCTION: Ambil Last Start/Deallocate Time dari Provisioning State
 # ===============================================================
 function Get-VMLastActionTime {
     param(
@@ -43,6 +43,8 @@ function Get-VMLastActionTime {
 
 # ===============================================================
 # 3. FUNCTION: Kirim Notifikasi Teams Adaptive Card
+# $powerStatus dibaca dari scope luar (loop utama) secara intentional —
+# menunjukkan status VM *sebelum* aksi Start/Deallocate dijalankan.
 # ===============================================================
 function Send-Teams {
     param(
@@ -50,16 +52,17 @@ function Send-Teams {
         [string] $StatusText,
         [string] $SubscriptionId,
         [string] $TenantName,
-        [string] $LastRunTime,
-        [string] $PowerStateCode   # dioper eksplisit, bukan dari scope luar
+        [string] $LastRunTime
     )
 
     $lastRunTimeText = if ($LastRunTime) { $LastRunTime } else { "N/A" }
 
-    $lastTimeLabel = switch ($PowerStateCode) {
-        "PowerState/running"     { "Last Start Time (WIB):"      }
-        "PowerState/deallocated" { "Last Deallocate Time (WIB):" }
-        default                  { "Last Status/Run Time (WIB):" }
+    $lastTimeLabel = if ($powerStatus.Code -eq "PowerState/running") {
+        "Last Start Time (WIB):"
+    } elseif ($powerStatus.Code -eq "PowerState/deallocated") {
+        "Last Deallocate Time (WIB):"
+    } else {
+        "Last Status/Run Time (WIB):"
     }
 
     $card = @{
@@ -73,11 +76,11 @@ function Send-Teams {
                 body      = @(
                     @{ type = "TextBlock"; size = "Medium"; weight = "Bolder"; text = "Azure Virtual Machine Status Update" },
                     @{ type = "FactSet"; facts = @(
-                        @{ title = "Nama Tenant:";                    value = $TenantName         },
-                        @{ title = "Subscription ID:";                value = $SubscriptionId     },
-                        @{ title = "Nama Virtual Machine:";           value = $VMName             },
-                        @{ title = "Status Virtual Machine:";         value = $StatusText         },
-                        @{ title = $lastTimeLabel;                    value = $lastRunTimeText     },
+                        @{ title = "Nama Tenant:";                     value = $TenantName     },
+                        @{ title = "Subscription ID:";                 value = $SubscriptionId },
+                        @{ title = "Nama Virtual Machine:";            value = $VMName         },
+                        @{ title = "Status Virtual Machine:";          value = $StatusText     },
+                        @{ title = $lastTimeLabel;                     value = $lastRunTimeText },
                         @{ title = "Waktu Pengecekan Terakhir (WIB):"; value = $wibNow.ToString("dd-MM-yyyy HH:mm:ss") }
                     )}
                 )
@@ -113,25 +116,25 @@ foreach ($sub in Get-AzSubscription) {
                 if ($isWork -and -not $isRun) {
                     $job = Start-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -AsJob -ErrorAction Stop
                     $jobs.Add($job)
-                    Send-Teams -VMName $vm.Name -StatusText "Running (Proses Dinyalakan)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime -PowerStateCode $powerStatus.Code
+                    Send-Teams -VMName $vm.Name -StatusText "Running (Proses Dinyalakan)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime
                 }
                 elseif (-not $isWork -and $isRun) {
                     $job = Stop-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Force -AsJob -ErrorAction Stop
                     $jobs.Add($job)
-                    Send-Teams -VMName $vm.Name -StatusText "Deallocated (Proses Dimatikan)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime -PowerStateCode $powerStatus.Code
+                    Send-Teams -VMName $vm.Name -StatusText "Deallocated (Proses Dimatikan)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime
                 }
                 else {
                     $state = if ($isRun) { "Running (Sesuai Jadwal)" } else { "Deallocated (Sesuai Jadwal)" }
-                    Send-Teams -VMName $vm.Name -StatusText $state -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime -PowerStateCode $powerStatus.Code
+                    Send-Teams -VMName $vm.Name -StatusText $state -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime $lastTime
                 }
             } catch {
                 Write-Error "Gagal memproses VM '$($vmBasic.Name)' di Sub '$($sub.Id)': $_"
-                Send-Teams -VMName $vmBasic.Name -StatusText "ERROR: Gagal memproses ($_)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime "N/A" -PowerStateCode ""
+                Send-Teams -VMName $vmBasic.Name -StatusText "ERROR: Gagal memproses ($_)" -SubscriptionId $sub.Id -TenantName $tenant -LastRunTime "N/A"
             }
         }
     } catch {
         Write-Error "Gagal memproses Subscription '$($sub.Id)': $_"
-        Send-Teams -VMName "N/A" -StatusText "ERROR Sub: $_" -SubscriptionId $sub.Id -TenantName "Unknown" -LastRunTime "N/A" -PowerStateCode ""
+        Send-Teams -VMName "N/A" -StatusText "ERROR Sub: $_" -SubscriptionId $sub.Id -TenantName "Unknown" -LastRunTime "N/A"
     }
 }
 

@@ -123,4 +123,4 @@ terraform.tfvars.example    # Contoh isian variabel per client
 ## Catatan Lain
 
 - Script `RB-VM-AutoOnOff.ps1` hanya mengirim notifikasi ke 1 webhook central (`TeamsWebhookURL`) — tidak ada mekanisme webhook terpisah per client di versi ini.
-- Waktu "Last Start/Deallocate" diambil dari `ProvisioningState.Time` VM (fungsi `Get-VMLastActionTime`), bukan Azure Activity Log — cukup akurat untuk kebutuhan normal karena Start/Deallocate memicu perubahan provisioning state, namun bisa juga terpengaruh operasi lain terhadap VM (resize, update tag, dsb) di luar Start/Deallocate.
+- Waktu "Last Start/Deallocate" diambil dari `ProvisioningState.Time` VM — akurat untuk operasi Start/Deallocate karena keduanya memicu perubahan provisioning state. Namun bisa juga berubah akibat operasi lain terhadap VM (resize, update extension, dsb) di luar Start/Deallocate.
