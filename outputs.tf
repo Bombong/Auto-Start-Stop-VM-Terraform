@@ -17,3 +17,13 @@ output "runbook_name" {
   description = "Nama Runbook utama"
   value       = azurerm_automation_runbook.vm_onoff.name
 }
+
+output "schedule_start_first_run" {
+  description = "Waktu pertama Schedule Start VM akan berjalan (H+1 08:30 WIB, dalam UTC)"
+  value       = local.schedule_start
+}
+
+output "schedule_stop_first_run" {
+  description = "Waktu pertama Schedule Stop VM akan berjalan (H+1 22:30 WIB, dalam UTC)"
+  value       = local.schedule_stop
+}
