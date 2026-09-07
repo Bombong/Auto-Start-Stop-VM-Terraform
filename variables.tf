@@ -73,9 +73,6 @@ variable "included_vms" {
 # ==============================================================
 # schedule_start_datetime & schedule_stop_datetime dihapus —
 # sekarang dikalkulasi otomatis di schedules.tf (H+1 dari saat apply).
-
-variable "timezone" {
-  description = "Timezone untuk Schedule"
-  type        = string
-  default     = "SE Asia Standard Time"
-}
+# timezone tidak diset di resource schedule karena provider azurerm ~> 3.x
+# tidak mendukung timezone bersamaan dengan start_time UTC — schedule
+# disimpan dalam UTC (01:30 & 15:30 UTC = 08:30 & 22:30 WIB).
