@@ -4,11 +4,21 @@
 variable "tenant_id" {
   description = "Azure AD Tenant ID milik client"
   type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.tenant_id))
+    error_message = "tenant_id harus berformat UUID (contoh: 00000000-0000-0000-0000-000000000000)."
+  }
 }
 
 variable "subscription_id" {
   description = "Subscription ID milik client (tempat Automation Account & VM berada)"
   type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.subscription_id))
+    error_message = "subscription_id harus berformat UUID (contoh: 11111111-1111-1111-1111-111111111111)."
+  }
 }
 
 # ==============================================================
@@ -25,7 +35,7 @@ variable "client_name" {
 }
 
 variable "resource_group_name" {
-  description = "Resource Group tempat Automation Account akan dibuat"
+  description = "Nama Resource Group yang akan dibuat untuk Automation Account"
   type        = string
 }
 
@@ -47,6 +57,12 @@ variable "role_scope_level" {
     condition     = contains(["subscription", "resource_group"], var.role_scope_level)
     error_message = "role_scope_level harus 'subscription' atau 'resource_group'."
   }
+}
+
+variable "vm_resource_groups" {
+  description = "Daftar nama Resource Group yang berisi VM target (dipakai hanya jika role_scope_level = 'resource_group')"
+  type        = list(string)
+  default     = []
 }
 
 # ==============================================================
@@ -71,8 +87,8 @@ variable "included_vms" {
 # ==============================================================
 # Jadwal
 # ==============================================================
-# schedule_start_datetime & schedule_stop_datetime dihapus —
-# sekarang dikalkulasi otomatis di schedules.tf (H+1 dari saat apply).
+# schedule_start_datetime & schedule_stop_datetime tidak diperlukan —
+# dikalkulasi otomatis di schedules.tf (H+1 dari saat apply).
 # timezone tidak diset di resource schedule karena provider azurerm ~> 3.x
-# tidak mendukung timezone bersamaan dengan start_time UTC — schedule
-# disimpan dalam UTC (01:30 & 15:30 UTC = 08:30 & 22:30 WIB).
+# tidak mendukung timezone + start_time UTC secara bersamaan.
+# Schedule disimpan dalam UTC: 01:30 UTC = 08:30 WIB, 15:30 UTC = 22:30 WIB.
