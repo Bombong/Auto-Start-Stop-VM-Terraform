@@ -8,7 +8,7 @@
 
 resource "azurerm_automation_module" "az_accounts" {
   name                    = "Az.Accounts"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
 
   module_link {
@@ -18,7 +18,7 @@ resource "azurerm_automation_module" "az_accounts" {
 
 resource "azurerm_automation_module" "az_compute" {
   name                    = "Az.Compute"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
 
   module_link {
@@ -30,7 +30,7 @@ resource "azurerm_automation_module" "az_compute" {
 
 resource "azurerm_automation_module" "az_resources" {
   name                    = "Az.Resources"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
 
   module_link {
