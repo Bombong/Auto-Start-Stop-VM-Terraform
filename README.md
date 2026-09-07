@@ -5,9 +5,9 @@ Provisioning otomatis: Automation Account, Managed Identity, Role Assignment, Mo
 ## Alur Kerja
 
 ```
-terraform apply
-      │
-      ▼
+               terraform apply
+                      │
+                      ▼
 ┌─────────────────────────────────────────────┐
 │           Azure Automation Account          │
 │         (AutomationVM-<client_name>)        │
