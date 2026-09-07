@@ -2,6 +2,64 @@
 
 Provisioning otomatis: Automation Account, Managed Identity, Role Assignment, Modul PowerShell, Runbook (utama + sync tenant), Automation Variables, dan Schedule (08:30 & 22:30 WIB).
 
+## Alur Kerja
+
+```
+terraform apply
+      │
+      ▼
+┌─────────────────────────────────────────────┐
+│           Azure Automation Account          │
+│         (AutomationVM-<client_name>)        │
+│                                             │
+│  ┌─────────────────────────────────────┐    │
+│  │        System-Assigned              │    │
+│  │        Managed Identity             │    │
+│  │   Role: Contributor / VM Contributor│    │
+│  │   Scope: Subscription / RG          │    │
+│  └─────────────────────────────────────┘    │
+│                                             │
+│  ┌──────────────┐   ┌──────────────────┐    │
+│  │  Schedule    │   │    Schedule      │    │
+│  │  Start VM    │   │    Stop VM       │    │
+│  │  01:30 UTC   │   │   15:30 UTC      │    │
+│  │ (08:30 WIB)  │   │  (22:30 WIB)     │    │
+│  └──────┬───────┘   └────────┬─────────┘    │
+│         │                    │              │
+│         └─────────┬──────────┘              │
+│                   ▼                         │
+│       ┌───────────────────────┐             │
+│       │  RB-VM-AutoOnOff.ps1  │             │
+│       └───────────┬───────────┘             │
+└───────────────────┼─────────────────────────┘
+                    │
+          ┌─────────┴──────────┐
+          ▼                    ▼
+   Jam kerja?             Di luar jam kerja?
+   08:30–22:30 WIB        22:30–08:30 WIB
+          │                    │
+   VM mati → Start VM    VM hidup → Stop VM
+   VM hidup → Lapor      VM mati  → Lapor
+          │                    │
+          └─────────┬──────────┘
+                    ▼
+         Notifikasi MS Teams
+         (via Power Automate Webhook)
+```
+
+**Runbook Pendukung:**
+
+```
+RB-Sync-Tenant.ps1
+      │
+      ▼
+Scan semua Subscription aktif
+      │
+      ▼
+Update TenantMappingJSON
+(Automation Variable)
+```
+
 ## Struktur File
 
 ```
