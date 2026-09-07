@@ -21,7 +21,7 @@ terraform.tfvars.example    # Contoh isian variabel per client
 ## Cara Pakai — Onboarding Client Baru
 
 1. Copy seluruh folder ini (atau gunakan sebagai module Terraform terpisah per client).
-2. Copy `terraform.tfvars.example` menjadi `terraform.tfvars`, isi sesuai data client (tenant ID, subscription ID, nama VM, webhook URL, dst).
+2. Copy `terraform.tfvars.example` menjadi `terraform.tfvars`, isi sesuai data client (tenant ID, subscription ID, nama VM, webhook URL, dst). Resource Group akan dibuat otomatis oleh Terraform — tidak perlu dibuat manual di Portal.
 3. Cek akun Azure aktif yang sedang dipakai (opsional tapi disarankan sebelum login):
 
    ```
