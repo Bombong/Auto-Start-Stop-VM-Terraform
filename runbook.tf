@@ -1,10 +1,10 @@
 # ==============================================================
-# Runbook
+# Runbook — VM Auto On/Off (utama)
 # ==============================================================
 resource "azurerm_automation_runbook" "vm_onoff" {
   name                    = "RB-VM-AutoOnOff"
   location                = var.location
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
   log_verbose             = true
   log_progress            = true
@@ -16,14 +16,17 @@ resource "azurerm_automation_runbook" "vm_onoff" {
   depends_on = [
     azurerm_automation_module.az_accounts,
     azurerm_automation_module.az_compute,
-    azurerm_automation_module.az_resources
+    azurerm_automation_module.az_resources,
   ]
 }
 
-resource "azurerm_automation_runbook" "sync_tenant" {
+# ==============================================================
+# Runbook — Sync Subscriptions
+# ==============================================================
+resource "azurerm_automation_runbook" "sync_subs" {
   name                    = "RB-Sync-Subs"
   location                = var.location
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
   log_verbose             = true
   log_progress            = true
@@ -36,11 +39,11 @@ resource "azurerm_automation_runbook" "sync_tenant" {
 }
 
 # ==============================================================
-# Automation Variables — dibaca oleh Runbook di atas
+# Automation Variables — dibaca oleh Runbook
 # ==============================================================
 resource "azurerm_automation_variable_string" "teams_webhook" {
   name                    = "TeamsWebhookURL"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
   value                   = var.teams_webhook_url
   encrypted               = true
@@ -48,7 +51,7 @@ resource "azurerm_automation_variable_string" "teams_webhook" {
 
 resource "azurerm_automation_variable_string" "tenant_mapping" {
   name                    = "TenantMappingJSON"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
   value                   = jsonencode({ TenantName = var.tenant_display_name, Subscriptions = {} })
   encrypted               = false
@@ -56,9 +59,8 @@ resource "azurerm_automation_variable_string" "tenant_mapping" {
 
 resource "azurerm_automation_variable_string" "included_vms" {
   name                    = "IncludedVMsJSON"
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.this.name
   automation_account_name = azurerm_automation_account.this.name
   value                   = jsonencode(var.included_vms)
   encrypted               = false
 }
-
