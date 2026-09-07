@@ -1,4 +1,17 @@
 # ==============================================================
+# Resource Group
+# ==============================================================
+resource "azurerm_resource_group" "this" {
+  name     = var.resource_group_name
+  location = var.location
+
+  tags = {
+    client  = var.client_name
+    purpose = "vm-auto-onoff"
+  }
+}
+
+# ==============================================================
 # Automation Account
 # ==============================================================
 resource "azurerm_automation_account" "this" {
@@ -15,6 +28,8 @@ resource "azurerm_automation_account" "this" {
     client  = var.client_name
     purpose = "vm-auto-onoff"
   }
+
+  depends_on = [azurerm_resource_group.this]
 }
 
 # ==============================================================

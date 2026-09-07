@@ -3,6 +3,11 @@ output "automation_account_name" {
   value       = azurerm_automation_account.this.name
 }
 
+output "resource_group_name" {
+  description = "Nama Resource Group yang dibuat"
+  value       = azurerm_resource_group.this.name
+}
+
 output "managed_identity_principal_id" {
   description = "Object (principal) ID dari Managed Identity — dipakai untuk verifikasi role assignment"
   value       = azurerm_automation_account.this.identity[0].principal_id
