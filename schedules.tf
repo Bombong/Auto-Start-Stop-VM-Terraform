@@ -1,34 +1,32 @@
 # ==============================================================
-# Kalkulasi waktu jadwal otomatis (H+1 dari saat terraform apply)
+# Kalkulasi waktu jadwal otomatis (selalu H+1 dari saat terraform apply)
 # Tidak perlu isi tanggal manual di tfvars setiap deploy client baru.
 #
 # Cara kerja:
 #   - timestamp() menghasilkan waktu UTC saat apply dijalankan
-#   - timeadd menambah offset jam ke waktu tersebut
-#   - formatdate memformat ke RFC3339 yang dibutuhkan Azure
+#   - timeadd(timestamp(), "24h") → dapat tanggal esok hari UTC
+#   - formatdate strip jam → dapat string "YYYY-MM-DD" esok hari
+#   - Jam target di-append langsung dalam UTC (08:30 WIB = 01:30 UTC, 22:30 WIB = 15:30 UTC)
 #
-# Offset dihitung dari UTC:
-#   WIB = UTC+7, jadi:
-#     08:30 WIB = 01:30 UTC → timeadd H+1 00:00 UTC + 1.5 jam  = +25.5 jam dari tengah malam UTC H+0
-#     22:30 WIB = 15:30 UTC → timeadd H+1 00:00 UTC + 15.5 jam = +39.5 jam dari tengah malam UTC H+0
-#
-# Namun karena timestamp() bukan tengah malam, kita cukup ambil "H+1 pukul XX:XX WIB"
-# dengan cara: floor ke hari ini (UTC) + 1 hari + offset jam WIB ke UTC
-# Pendekatan paling simpel: pakai timeadd dari timestamp() dengan asumsi apply
-# dilakukan jauh sebelum jadwal (jika apply dilakukan siang, H+1 08:30 masih valid).
+# Hasilnya selalu tanggal esok pukul 08:30 & 22:30 WIB,
+# tidak peduli jam berapa apply dijalankan.
 # ==============================================================
 
 locals {
-  # Ambil tanggal hari ini UTC (strip jam), tambah 1 hari, lalu set jam target dalam UTC
-  # 08:30 WIB = 01:30 UTC  → offset dari tengah malam UTC hari ini: +25h30m
-  # 22:30 WIB = 15:30 UTC  → offset dari tengah malam UTC hari ini: +39h30m
+  # Kalkulasi jadwal otomatis — selalu H+1 dari tanggal saat terraform apply dijalankan.
   #
-  # Untuk dapat "tengah malam UTC hari ini", kita strip jam dari timestamp()
-  # dengan memformat ke "YYYY-MM-DD" lalu append "T00:00:00Z"
-  today_midnight_utc = "${formatdate("YYYY-MM-DD", timestamp())}T00:00:00Z"
+  # Strategi:
+  #   1. Ambil tanggal H+1 dalam UTC dari timestamp() → strip jam, tambah 24h
+  #   2. Set jam target di UTC:
+  #      08:30 WIB = 01:30 UTC → append "T01:30:00Z"
+  #      22:30 WIB = 15:30 UTC → append "T15:30:00Z"
+  #
+  # Dengan cara ini hasil selalu tanggal esok hari pukul XX:XX WIB,
+  # tidak peduli jam berapa apply dijalankan hari ini — tidak ada edge case.
+  tomorrow_date_utc = formatdate("YYYY-MM-DD", timeadd(timestamp(), "24h"))
 
-  schedule_start = timeadd(local.today_midnight_utc, "25h30m") # H+1 08:30 WIB
-  schedule_stop  = timeadd(local.today_midnight_utc, "39h30m") # H+1 22:30 WIB
+  schedule_start = "${local.tomorrow_date_utc}T01:30:00Z" # H+1 08:30 WIB
+  schedule_stop  = "${local.tomorrow_date_utc}T15:30:00Z" # H+1 22:30 WIB
 }
 
 # ==============================================================
@@ -40,7 +38,6 @@ resource "azurerm_automation_schedule" "start_vm" {
   automation_account_name = azurerm_automation_account.this.name
   frequency               = "Day"
   interval                = 1
-  timezone                = var.timezone
   start_time              = local.schedule_start
   description             = "Trigger pengecekan & start VM, jam 08:30 WIB (otomatis H+1 saat apply)"
 }
@@ -61,7 +58,6 @@ resource "azurerm_automation_schedule" "stop_vm" {
   automation_account_name = azurerm_automation_account.this.name
   frequency               = "Day"
   interval                = 1
-  timezone                = var.timezone
   start_time              = local.schedule_stop
   description             = "Trigger pengecekan & deallocate VM, jam 22:30 WIB (otomatis H+1 saat apply)"
 }

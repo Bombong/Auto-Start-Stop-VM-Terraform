@@ -21,7 +21,7 @@ resource "azurerm_automation_runbook" "vm_onoff" {
 }
 
 resource "azurerm_automation_runbook" "sync_tenant" {
-  name                    = "RB-Sync-Tenant"
+  name                    = "RB-Sync-Subs"
   location                = var.location
   resource_group_name     = var.resource_group_name
   automation_account_name = azurerm_automation_account.this.name
@@ -30,7 +30,7 @@ resource "azurerm_automation_runbook" "sync_tenant" {
   description             = "Sinkronisasi daftar Subscription aktif ke TenantMappingJSON"
   runbook_type            = "PowerShell72"
 
-  content = file("${path.module}/scripts/RB-Sync-Tenant.ps1")
+  content = file("${path.module}/scripts/RB-Sync-Subs.ps1")
 
   depends_on = [azurerm_automation_module.az_accounts]
 }
