@@ -50,7 +50,7 @@ Provisioning otomatis: Automation Account, Managed Identity, Role Assignment, Mo
 **Runbook Pendukung:**
 
 ```
-RB-Sync-Tenant.ps1
+RB-Sync-Subs.ps1
       │
       ▼
 Scan semua Subscription aktif
@@ -72,7 +72,7 @@ schedules.tf                # Schedule Start/Stop + link ke Runbook
 outputs.tf                  # Output (principal ID, dsb)
 scripts/
   RB-VM-AutoOnOff.ps1       # Script Runbook utama
-  RB-Sync-Tenant.ps1        # Script sync daftar Subscription
+  RB-Sync-Subs.ps1          # Script sync daftar Subscription
 terraform.tfvars.example    # Contoh isian variabel per client
 ```
 
@@ -103,14 +103,14 @@ terraform.tfvars.example    # Contoh isian variabel per client
    ```
 5. Jalankan:
    ```
-   terraform init
-   terraform plan
-   terraform apply
+   tofu init
+   tofu plan
+   tofu apply
    ```
 6. Setelah selesai, cek output `managed_identity_principal_id` — pastikan role assignment berhasil (bisa diverifikasi lewat Portal, IAM Subscription).
 7. Login ke Azure Portal client, buka Runbook `RB-VM-AutoOnOff`, klik **Start** untuk test manual.
 8. Cek Teams — pastikan notifikasi masuk.
-9. Jalankan `RB-Sync-Tenant` secara manual dari Portal (Runbooks → `RB-Sync-Tenant` → Start) untuk sinkronisasi daftar Subscription aktif ke variabel `TenantMappingJSON`. Lakukan ini setiap kali ada perubahan Subscription di tenant client.
+9. Jalankan `RB-Sync-Subs` secara manual dari Portal (Runbooks → `RB-Sync-Subs` → Start) untuk sinkronisasi daftar Subscription aktif ke variabel `TenantMappingJSON`. Lakukan ini setiap kali ada perubahan Subscription di tenant client.
 
 ## Catatan Penting
 
