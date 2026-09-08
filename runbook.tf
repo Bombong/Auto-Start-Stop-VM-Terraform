@@ -18,6 +18,11 @@ resource "azurerm_automation_runbook" "vm_onoff" {
     azurerm_automation_module.az_compute,
     azurerm_automation_module.az_resources,
   ]
+
+  # Perubahan content script di Portal tidak akan ditimpa saat tofu apply
+  lifecycle {
+    ignore_changes = [content]
+  }
 }
 
 # ==============================================================
@@ -36,6 +41,11 @@ resource "azurerm_automation_runbook" "sync_subs" {
   content = file("${path.module}/scripts/RB-Sync-Subs.ps1")
 
   depends_on = [azurerm_automation_module.az_accounts]
+
+  # Perubahan content script di Portal tidak akan ditimpa saat tofu apply
+  lifecycle {
+    ignore_changes = [content]
+  }
 }
 
 # ==============================================================
@@ -47,6 +57,11 @@ resource "azurerm_automation_variable_string" "teams_webhook" {
   automation_account_name = azurerm_automation_account.this.name
   value                   = var.teams_webhook_url
   encrypted               = true
+
+  # Value yang diubah di Portal tidak akan ditimpa saat tofu apply
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "azurerm_automation_variable_string" "tenant_mapping" {
@@ -55,6 +70,11 @@ resource "azurerm_automation_variable_string" "tenant_mapping" {
   automation_account_name = azurerm_automation_account.this.name
   value                   = jsonencode({ TenantName = var.tenant_display_name, Subscriptions = {} })
   encrypted               = false
+
+  # Value dikelola oleh RB-Sync-Subs — tidak ditimpa saat tofu apply
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "azurerm_automation_variable_string" "included_vms" {
@@ -63,4 +83,9 @@ resource "azurerm_automation_variable_string" "included_vms" {
   automation_account_name = azurerm_automation_account.this.name
   value                   = jsonencode(var.included_vms)
   encrypted               = false
+
+  # Value yang diubah di Portal tidak akan ditimpa saat tofu apply
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
